@@ -1,8 +1,8 @@
 ## Get Started with ZeroSop
 
-### Processing
+### Processing YCB-V Renders
 
-1. Clone MASt3R.
+1. Mast3r-SfM
 ```bash
 # make pairs use path of data
 python make_pairs_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000002 --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --retrieval_model ~/PycharmProjects/mast3r/checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth
