@@ -1,5 +1,4 @@
-## Get Started with ZeroSop (do when everything was setup as descripted of the original Mast3r
-
+## Get Started with ZeroSop Camera-Registration (first Setup Repo)
 ### Processing YCB-V Renders
 
 1. Mast3r-SfM
@@ -10,6 +9,8 @@ python make_pairs_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/ob
 # make SfM save as colmap format
 python kapture_mast3r_mapping_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015 --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --device cuda --min_len_track 2 --skip_geometric_verification
 ```
+
+## Start here First
 
 ![banner](assets/mast3r.jpg)
 
