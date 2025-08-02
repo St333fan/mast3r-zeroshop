@@ -1,4 +1,4 @@
-## Get Started with ZeroSop
+## Get Started with ZeroSop (do when everything was setup as descripted of the original Mast3r
 
 ### Processing YCB-V Renders
 
