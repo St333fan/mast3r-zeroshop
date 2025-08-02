@@ -8,6 +8,29 @@ python make_pairs_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/ob
 
 # make SfM save as colmap format
 python kapture_mast3r_mapping_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015 --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --device cuda --min_len_track 2 --skip_geometric_verification
+
+# folder structure afterwards
+obj_000001
+└── train_pbr
+    ├── 000000
+    │   ├── depth
+    │   ├── mask
+    │   ├── mask_visib
+    │   ├── rgb
+    │   └── rgb_mask
+    ├── mast3r-sfm
+    │   ├── segmented
+    │   │   ├── images
+    │   │   ├── priors_for_reconstruction
+    │   │   └── reconstruction
+    │   │       └── 0
+    │   └── surface
+    │       ├── images
+    │       ├── priors_for_reconstruction
+    │       └── reconstruction
+    │           └── 0
+    └── vggt
+
 ```
 
 ## Start here First
