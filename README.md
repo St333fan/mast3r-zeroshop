@@ -1,4 +1,7 @@
 ## Get Started with ZeroSop Camera-Registration (first Setup Repo)
+### Render YCB-V First, set to 30 Cameras
+https://github.com/St333fan/BlenderProcRenderBOP
+
 ### Processing YCB-V Renders
 
 1. Mast3r-SfM
