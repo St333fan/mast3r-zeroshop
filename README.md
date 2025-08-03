@@ -9,10 +9,16 @@ python prepare_structure.py /home/stefan/Downloads/objs_sizex10/objs_texture_siz
 ## generate structure for ycb-v test all, adapt paths in there
 chmod +x ./process_all_ycbv_objects.sh
 ./process_all_ycbv_objects.sh
-
+```
+```bash
 # make pairs use path of data
 python make_pairs_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000002 --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --retrieval_model ~/PycharmProjects/mast3r/checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth
 
+## generate pairs for ycb-v test all, adapt paths in there
+chmod +x ./make_pairs_all_ycbv.sh
+./make_pairs_all_ycbv.sh
+```
+```bash
 # make SfM save as colmap format
 python kapture_mast3r_mapping_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015 --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --device cuda --min_len_track 2 --skip_geometric_verification
 
