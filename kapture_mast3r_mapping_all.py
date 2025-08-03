@@ -9,6 +9,7 @@ import pycolmap
 import os
 import os.path as path
 import argparse
+import subprocess
 
 from mast3r.model import AsymmetricMASt3R
 from mast3r.colmap.mapping import (kapture_import_image_folder_or_list, run_mast3r_matching, pycolmap_run_triangulator,
@@ -49,10 +50,66 @@ def get_argparser():
     return parser
 
 
+def run_colmap_commands(output_dir):
+    """Run COLMAP image undistorter and copy commands for a specific directory"""
+    try:
+        # Create dense directory in the output directory
+        dense_dir = path.join(output_dir, 'dense')
+        os.makedirs(dense_dir, exist_ok=True)
+        
+        # Prepare paths relative to output_dir
+        image_path = path.join(output_dir, 'images')
+        reconstruction_path = path.join(output_dir, 'reconstruction', '0')
+        sparse_dir = path.join(output_dir, 'sparse')
+        
+        # Check if required directories exist
+        if not path.exists(image_path):
+            print(f"Warning: Image path {image_path} does not exist, skipping COLMAP commands")
+            return False
+            
+        if not path.exists(reconstruction_path):
+            print(f"Warning: Reconstruction path {reconstruction_path} does not exist, skipping COLMAP commands")
+            return False
+        
+        print(f"Running COLMAP image undistorter for {output_dir}")
+        
+        # Run COLMAP image undistorter
+        cmd = [
+            'colmap', 'image_undistorter',
+            '--image_path', image_path,
+            '--input_path', reconstruction_path,
+            '--output_path', dense_dir,
+            '--output_type', 'COLMAP',
+            '--max_image_size', '2000',
+            '--blank_pixels', '1'
+        ]
+        subprocess.run(cmd, check=True)
+        
+        # Create sparse directory and copy dense/sparse to sparse/0
+        os.makedirs(sparse_dir, exist_ok=True)
+        dense_sparse_path = path.join(dense_dir, 'sparse')
+        sparse_0_path = path.join(sparse_dir, '0')
+        
+        if path.exists(dense_sparse_path):
+            subprocess.run(['cp', '-r', dense_sparse_path, sparse_0_path], check=True)
+            print(f"Successfully completed COLMAP commands for {output_dir}")
+            return True
+        else:
+            print(f"Warning: Dense sparse directory {dense_sparse_path} not found")
+            return False
+        
+    except subprocess.CalledProcessError as e:
+        print(f"COLMAP command failed for {output_dir}: {e}")
+        return False
+    except Exception as e:
+        print(f"Error running COLMAP commands for {output_dir}: {e}")
+        return False
+
+
 def process_single_directory(subdir, base_path, model, maxdim, patch_size, args):
     """Process a single directory (surface or segmented)"""
     images_dir = path.join(base_path, 'train_pbr', 'mast3r-sfm', subdir, 'images')
-    output_dir = path.join(base_path, 'train_phr', 'mast3r-sfm', subdir)
+    output_dir = path.join(base_path, 'train_pbr', 'mast3r-sfm', subdir)
     pairsfile_path = path.join(images_dir, 'pairs.txt')
     
     # Set different conf_thr values for each directory
@@ -128,6 +185,10 @@ def process_single_directory(subdir, base_path, model, maxdim, patch_size, args)
         glomap_run_mapper(args.glomap_bin, colmap_db_path, reconstruction_path, images_dir)
     
     print(f"Completed processing {subdir}: output in {output_dir}")
+    
+    # Run COLMAP commands after successful processing
+    run_colmap_commands(output_dir)
+    
     return True
 
 
