@@ -7,7 +7,7 @@ https://github.com/St333fan/BlenderProcRenderBOP
 1. Mast3r-SfM
 ```bash
 # generate structure, for one object
-python prepare_structure.py /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000003
+python prepare_structure.py ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000003
 
 ## generate structure for ycb-v test all, adapt paths in there
 chmod +x prepare_structure_all_ycbv.sh
