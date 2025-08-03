@@ -7,8 +7,8 @@
 python prepare_structure.py /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000003
 
 ## generate structure for ycb-v test all, adapt paths in there
-chmod +x ./process_all_ycbv_objects.sh
-./process_all_ycbv_objects.sh
+chmod +x prepare_structure_all_ycbv.sh
+prepare_structure_all_ycbv.sh
 ```
 ```bash
 # make pairs use path of data, for one object
