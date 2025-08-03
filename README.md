@@ -1,4 +1,4 @@
-## Get Started with ZeroSop Camera-Registration (first Setup Repo)
+## Get Started with ZeroSop Camera-Registration (first Setup Repo, scroll down)
 ### Render YCB-V First, set to 30 Cameras
 https://github.com/St333fan/BlenderProcRenderBOP
 
@@ -31,28 +31,65 @@ chmod +x ./kapture_mast3r_mapping_all_ycbv.sh
 ```
 ```bash
 # folder structure afterwards
-obj_000001
-└── train_pbr
-    ├── 000000
-    │   ├── depth
-    │   ├── mask
-    │   ├── mask_visib
-    │   ├── rgb
-    │   └── rgb_mask
-    ├── mast3r-sfm
-    │   ├── segmented
-    │   │   ├── images
-    │   │   ├── priors_for_reconstruction
-    │   │   └── reconstruction
-    │   │       └── 0
-    │   └── surface
-    │       ├── images
-    │       ├── priors_for_reconstruction
-    │       └── reconstruction
-    │           └── 0
-    └── vggt
-
+├── obj_000001
+│   └── train_pbr
+│       ├── 000000
+│       │   ├── depth
+│       │   ├── mask
+│       │   ├── mask_visib
+│       │   ├── rgb
+│       │   └── rgb_mask
+│       └── mast3r-sfm
+│           ├── segmented
+│           │   ├── checkpoints
+│           │   ├── dense
+│           │   │   ├── images
+│           │   │   ├── sparse
+│           │   │   └── stereo
+│           │   │       ├── consistency_graphs
+│           │   │       ├── depth_maps
+│           │   │       └── normal_maps
+│           │   ├── images
+│           │   ├── masks
+│           │   ├── mesh
+│           │   │   └── latest
+│           │   ├── pg_view
+│           │   ├── priors_for_reconstruction
+│           │   ├── reconstruction
+│           │   │   └── 0
+│           │   ├── sparse
+│           │   │   └── 0
+│           │   ├── test_stat
+│           │   └── test_view
+│           └── surface
+│               ├── checkpoints
+│               ├── dense
+│               │   ├── images
+│               │   ├── sparse
+│               │   └── stereo
+│               │       ├── consistency_graphs
+│               │       ├── depth_maps
+│               │       └── normal_maps
+│               ├── images
+│               ├── masks
+│               ├── mesh
+│               │   └── latest
+│               ├── pg_view
+│               ├── priors_for_reconstruction
+│               ├── reconstruction
+│               │   └── 0
+│               ├── sparse
+│               │   └── 0
+│               ├── test_stat
+│               └── test_view
 ```
+### Single Use
+```bash
+python make_pairs.py --dir /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm/images --output /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm/images/pairs.txt --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --retrieval_model /home/stefan/PycharmProjects/mast3r/checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth --scene_graph retrieval-20-2
+
+python kapture_mast3r_mapping.py   --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric   --dir /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm/images --pairsfile_path /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm/images/pairs.txt --output /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm --device cuda --conf_th 1.01 --min_len_track 2 --skip_geometric_verification
+```
+
 
 ## Start here First
 
