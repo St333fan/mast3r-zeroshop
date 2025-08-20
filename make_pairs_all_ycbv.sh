@@ -7,11 +7,11 @@
 BASE_PATH="/home/stefan/Downloads/objs_sizex10/objs_texture_sizex10"
 
 # Path to the Python script
-PYTHON_SCRIPT="/home/stefan/PycharmProjects/mast3r/make_pairs_all.py"
+PYTHON_SCRIPT="make_pairs_all.py"
 
 # Model parameters
 MODEL_NAME="MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric"
-RETRIEVAL_MODEL="/home/stefan/PycharmProjects/mast3r/checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth"
+RETRIEVAL_MODEL="./checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth"
 
 # Check if the Python script exists
 if [ ! -f "$PYTHON_SCRIPT" ]; then
