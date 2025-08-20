@@ -7,7 +7,7 @@
 BASE_PATH="/home/stefan/Downloads/objs_sizex10/objs_texture_sizex10"
 
 # Path to the Python script
-PYTHON_SCRIPT="/home/stefan/PycharmProjects/mast3r/prepare_structure.py"
+PYTHON_SCRIPT="prepare_structure.py"
 
 # Check if the Python script exists
 if [ ! -f "$PYTHON_SCRIPT" ]; then
