@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# Bash script to process all objects from 0 to 21 using kapture_mast3r_mapping_all.py
+# Bash script to process all objects from 1 to 21 using kapture_mast3r_mapping_all.py
 # This script runs the Python script for each object directory
 
 # Base path where all object directories are located
 BASE_PATH="/home/stefan/Downloads/objs_sizex10/objs_texture_sizex10"
+BASE_PATH="/home/stefan/Downloads/dataset_test_real_labor"
 
 # Path to the Python script
-PYTHON_SCRIPT="kapture_mast3r_mapping_all.py"
+PYTHON_SCRIPT="/home/stefan/PycharmProjects/mast3r/kapture_mast3r_mapping_all.py"
 
 # Model parameters
 MODEL_NAME="MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric"
@@ -85,12 +86,29 @@ for i in {1..21}; do
     if python3 "$PYTHON_SCRIPT" --path "$obj_path" --model_name "$MODEL_NAME" --use_single_camera; then
         echo "✓ Successfully processed obj_$obj_num"
         ((success_count++))
+
+        # Bundler export for both surface and segmented
+        for mode in surface segmented; do
+            sparse_dir="$obj_path/train_pbr/mast3r-sfm/$mode/sparse/0"
+            output_dir="$obj_path/train_pbr/mast3r-sfm/$mode/images/scene"
+            if [ -d "$sparse_dir" ]; then
+                mkdir -p "$output_dir"
+                echo "Exporting bundler for $mode: colmap model_converter --input_path $sparse_dir --output_path $output_dir --output_type BUNDLER"
+                if colmap model_converter --input_path "$sparse_dir" --output_path "$output_dir" --output_type BUNDLER; then
+                    echo "✓ Bundler export successful for $mode of obj_$obj_num"
+                else
+                    echo "✗ Bundler export failed for $mode of obj_$obj_num"
+                fi
+            else
+                echo "Warning: $sparse_dir does not exist, skipping bundler export for $mode of obj_$obj_num"
+            fi
+        done
     else
         echo "✗ Failed to process obj_$obj_num"
         ((failed_count++))
         failed_objects+=("obj_$obj_num")
     fi
-    
+
     echo "----------------------------------------"
 done
 
