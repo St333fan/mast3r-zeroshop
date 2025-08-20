@@ -1,4 +1,4 @@
-## Get Started with ZeroSop Camera-Registration (first Setup Repo, scroll down)
+## Get Started with ZeroShop Camera-Registration (first Setup Repo, scroll down)
 ### Render YCB-V First, set to 30 Cameras
 https://github.com/St333fan/BlenderProcRenderBOP
 
