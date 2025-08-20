@@ -9,7 +9,7 @@ https://github.com/St333fan/BlenderProcRenderBOP
 # generate structure, for one object
 python prepare_structure.py ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000003
 
-## generate structure for ycb-v test all, adapt paths in there
+## generate structure for ycb-v test all, adapt dataset path in there
 chmod +x prepare_structure_all_ycbv.sh
 prepare_structure_all_ycbv.sh
 ```
@@ -17,7 +17,7 @@ prepare_structure_all_ycbv.sh
 # make pairs use path of data, for one object
 python make_pairs_all.py --path ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000002 --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --retrieval_model ~/PycharmProjects/mast3r/checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth
 
-## generate pairs for ycb-v test all, adapt paths in there
+## generate pairs for ycb-v test all, adapt dataset path in there
 chmod +x ./make_pairs_all_ycbv.sh
 ./make_pairs_all_ycbv.sh
 ```
@@ -91,7 +91,7 @@ python kapture_mast3r_mapping.py   --model_name MASt3R_ViTLarge_BaseDecoder_512_
 ```
 
 
-## Start here First
+## Original Git -->
 
 ![banner](assets/mast3r.jpg)
 
