@@ -2,6 +2,9 @@
 ### Render YCB-V First, set to 30 Cameras
 https://github.com/St333fan/BlenderProcRenderBOP
 
+for real-life datasets refer to:
+https://github.com/St333fan/Grounded-SAM-2-zeroshop
+
 ### Processing YCB-V Renders
 
 1. Mast3r-SfM
