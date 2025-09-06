@@ -136,12 +136,23 @@ def get_3D_model_from_scene(silent, scene_state, min_conf_thr=2, as_pointcloud=F
         pts3d, _, confs = to_numpy(scene.get_dense_pts3d(clean_depth=clean_depth))
 
     #msk = to_numpy([c > min_conf_thr for c in confs])
-    msk = to_numpy([c > 0.3 for c in confs])
+    msk = to_numpy([c > 0.8 for c in confs])
     pts3dn = to_numpy(pts3d)
     rgbimgn = to_numpy(rgbimg)
     focalsn = to_numpy(focals)
     cams2worldn = to_numpy(cams2world)
 
+    # Apply mask filtering to keep only confident points
+    pts3dn_filtered = []
+    for i, (pts, mask) in enumerate(zip(pts3dn, msk)):
+        # Reshape points to match mask dimensions if needed
+        pts_reshaped = pts.reshape(mask.shape + (3,))
+        # Apply mask to filter points
+        filtered_pts = pts_reshaped[mask]
+        pts3dn_filtered.append(filtered_pts)
+
+    # Now use pts3dn_filtered instead of pts3dn for further processing
+    pts3dn = pts3dn_filtered
 
     mask_path = "/home/stefan/Downloads/dataset_test_real_labor/obj_000006/train_pbr/scene/000000_mask.png"
     img_shape = rgbimgn[0].shape[:2]
@@ -149,7 +160,7 @@ def get_3D_model_from_scene(silent, scene_state, min_conf_thr=2, as_pointcloud=F
     pts3dn, cams2worldn, focalsn, img_shape, 
     mask_path, 
     depth_path="depth_mm_16bit.png",  # Your 64x36 depth image
-    depth_tolerance_cm=100.0  # 25cm tolerance
+    depth_tolerance_cm=20.0  # 25cm tolerance
     )
     print("Points seen by cam0 and inside mask:", pts_seen.shape[0])
     # Example usage after extracting pts3d:
@@ -228,7 +239,11 @@ def get_reconstructed_scene(outdir, gradio_delete_cache, model, retrieval_model,
     import matplotlib.pyplot as plt
     import imageio.v2 as imageio 
 
+
+    # 16:9
     depth_image = scene_state.sparse_ga.depthmaps[0].reshape(36, 64).cpu().numpy()
+    # 4:3
+    # depth_image = scene_state.sparse_ga.depthmaps[0].reshape(48, 64).cpu().numpy()
 
     # Normalize depth to 0-65535 for 16-bit PNG
     depth_min = np.nanmin(depth_image)
@@ -450,6 +465,7 @@ def get_pts_seen_by_cam0_with_mask(
     
     # Load and resize depth image if provided
     depth_image = None
+    mean_depth_in_mask = None
     if depth_path is not None:
         depth_img = imageio.imread(depth_path)
         depth_scale_y = img_shape[0] / depth_img.shape[0]
@@ -458,6 +474,18 @@ def get_pts_seen_by_cam0_with_mask(
                              (depth_scale_y, depth_scale_x),
                              order=1)
         depth_image = depth_resized
+        
+        # Calculate mean depth within the mask
+        masked_depth = depth_image[mask]
+        valid_depth = masked_depth[masked_depth > 0]  # Remove zero/invalid depths
+        if len(valid_depth) > 0:
+            mean_depth_in_mask = np.mean(valid_depth)
+            print(f"Mean depth within mask: {mean_depth_in_mask:.2f} mm")
+            print(f"Min depth within mask: {np.min(valid_depth):.2f} mm")
+            print(f"Max depth within mask: {np.max(valid_depth):.2f} mm")
+            print(f"Valid depth pixels in mask: {len(valid_depth)}")
+        else:
+            print("No valid depth values found within the mask")
     
     # Convert camera matrices to numpy if needed
     if hasattr(cams2world, 'detach'):
@@ -475,8 +503,11 @@ def get_pts_seen_by_cam0_with_mask(
     
     cx, cy = img_shape[1] / 2, img_shape[0] / 2
     seen_points = []
-    
+    count = 0
     for pts in pts3d:
+        count += 1
+        if count == 2:
+            break
         # Convert to numpy if tensor
         if hasattr(pts, 'detach'):
             pts_flat = pts.detach().cpu().numpy().reshape(-1, 3)
@@ -522,26 +553,24 @@ def get_pts_seen_by_cam0_with_mask(
         # Apply mask filter to inside points
         mask_valid = mask[v_inside, u_inside]
 
-        if depth_image is not None:
-            # Get depth values for points that are inside and pass mask
-            depth_at_pixels = depth_image[v_inside, u_inside]
+        if depth_image is not None and mean_depth_in_mask is not None:
+            # Use mean depth within mask + tolerance for filtering
             cam_depths_mm = pts_cam_front[inside_indices, 2] * 1000.0
-
-            # Old code: use tolerance
-            tol_mm = depth_tolerance_cm * 10.0
-            depth_diff = np.abs(cam_depths_mm - depth_at_pixels)
+            tol_mm = depth_tolerance_cm * 10.0  # Convert cm to mm
+            
+            # Filter points based on mean depth + tolerance
+            depth_diff = np.abs(cam_depths_mm - mean_depth_in_mask) - (mean_depth_in_mask - np.min(valid_depth))/2
             depth_valid = depth_diff <= tol_mm
 
-            # New code: remove all that are farther away than the depth map
-            depth_valid_strict = cam_depths_mm <= depth_at_pixels
-
             # Combine mask and depth filters
-            combined_valid = mask_valid & depth_valid_strict
+            combined_valid = mask_valid & depth_valid
 
             print(f"Points inside image: {len(inside_indices)}")
             print(f"Points passing mask: {np.sum(mask_valid)}")
-            print(f"Points passing depth: {np.sum(depth_valid)}")
-            print(f"Points passing both: {np.sum(combined_valid)}")
+            print(f"Mean depth used for filtering: {mean_depth_in_mask:.2f} mm")
+            print(f"Tolerance: {tol_mm:.2f} mm")
+            print(f"Points passing depth filter (mean±tolerance): {np.sum(depth_valid)}")
+            print(f"Points passing both filters: {np.sum(combined_valid)}")
             
         else:
             combined_valid = mask_valid
@@ -553,10 +582,32 @@ def get_pts_seen_by_cam0_with_mask(
             valid_inside_indices = inside_indices[combined_valid]
             final_filter[valid_inside_indices] = True
             
-            # Get the final points
+            # Get the final points (keep in camera coordinates for this view)
             seen_points.append(pts_cam_front[final_filter]) #world coordinates
+    all_points = np.concatenate(seen_points, axis=0) if seen_points else np.zeros((0, 3))
+    if all_points.shape[0] > 0:
+        mean_z = np.mean(all_points[:, 2])
+        print(f"Mean z value of all points: {mean_z:.4f}")
+        # Keep only points within mean_z ± 3cm (0.03m)
+        z_min = mean_z - 0.03
+        z_max = mean_z + 0.03
+        in_range = (all_points[:, 2] >= z_min) & (all_points[:, 2] <= z_max)
+        filtered_points = all_points[in_range]
+        print(f"Points within ±3cm of mean z: {filtered_points.shape[0]}")
+    else:
+        filtered_points = np.zeros((0, 3))
+        print("No points found to calculate mean z value.")
 
-    return np.concatenate(seen_points, axis=0) if seen_points else np.zeros((0, 3))
+    if filtered_points.shape[0] > 0:
+        min_y = np.min(filtered_points[:, 1])
+        max_y = np.max(filtered_points[:, 1])
+        height = max_y - min_y
+        print(f"Bounding box in y: min={min_y}, max={max_y}, height={height}")
+    else:
+        height = None
+        print("No points to compute bounding box.")
+
+    return filtered_points
 
 
 import trimesh
