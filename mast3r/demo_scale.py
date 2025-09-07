@@ -55,6 +55,9 @@ def get_args_parser():
     parser.add_argument('--gradio_delete_cache', default=None, type=int,
                         help='age/frequency at which gradio removes the file. If >0, matching cache is purged')
     parser.add_argument('--retrieval_model', default=None, type=str, help="retrieval_model to be loaded")
+    parser.add_argument('--input_path', default=None, type=str, help="input path for automated demo")
+    parser.add_argument('--output_path', default=None, type=str, help="output path for automated demo")
+    parser.add_argument('--input_mask_path', default=None, type=str, help="optional input mask path for automated demo")
 
     actions = parser._actions
     for action in actions:
@@ -112,7 +115,7 @@ def _convert_scene_output_to_glb(outfile, imgs, pts3d, mask, focals, cams2world,
 
 
 def get_3D_model_from_scene(silent, scene_state, min_conf_thr=2, as_pointcloud=False, mask_sky=False,
-                            clean_depth=False, transparent_cams=False, cam_size=0.05, TSDF_thresh=0):
+                            clean_depth=False, transparent_cams=False, cam_size=0.05, TSDF_thresh=0, mask_path=None, outdir=None):
     """
     extract 3D_model (glb file) from a reconstructed scene
     """
@@ -154,26 +157,25 @@ def get_3D_model_from_scene(silent, scene_state, min_conf_thr=2, as_pointcloud=F
     # Now use pts3dn_filtered instead of pts3dn for further processing
     pts3dn = pts3dn_filtered
 
-    mask_path = "/home/stefan/Downloads/dataset_test_real_labor/obj_000006/train_pbr/scene/000000_mask.png"
     img_shape = rgbimgn[0].shape[:2]
-    pts_seen = get_pts_seen_by_cam0_with_mask(
+    pts_seen, height = get_pts_seen_by_cam0_with_mask(
     pts3dn, cams2worldn, focalsn, img_shape, 
-    mask_path, 
-    depth_path="depth_mm_16bit.png",  # Your 64x36 depth image
+    mask_path=mask_path, 
+    depth_path=outdir + "/depth_mm_16bit.png",  # Needs to be correct 64x36 or else depth image
     depth_tolerance_cm=20.0  # 25cm tolerance
     )
     print("Points seen by cam0 and inside mask:", pts_seen.shape[0])
     # Example usage after extracting pts3d:
-    save_points_as_ply(pts_seen, "scene_points.ply")
+    save_points_as_ply(pts_seen, outdir + "/scene_points.ply")
 
     return _convert_scene_output_to_glb(outfile, rgbimg, pts3d, msk, focals, cams2world, as_pointcloud=as_pointcloud,
-                                        transparent_cams=transparent_cams, cam_size=cam_size, silent=silent)
+                                        transparent_cams=transparent_cams, cam_size=cam_size, silent=silent), height
 
 
 def get_reconstructed_scene(outdir, gradio_delete_cache, model, retrieval_model, device, silent, image_size,
                             current_scene_state, filelist, optim_level, lr1, niter1, lr2, niter2, min_conf_thr,
                             matching_conf_thr, as_pointcloud, mask_sky, clean_depth, transparent_cams, cam_size,
-                            scenegraph_type, winsize, win_cyclic, refid, TSDF_thresh, shared_intrinsics, **kw):
+                            scenegraph_type, winsize, win_cyclic, refid, TSDF_thresh, shared_intrinsics, mask_path, **kw):
     """
     from a list of images, run mast3r inference, sparse global aligner.
     then run get_3D_model_from_scene
@@ -233,17 +235,20 @@ def get_reconstructed_scene(outdir, gradio_delete_cache, model, retrieval_model,
         outfile_name = tempfile.mktemp(suffix='_scene.glb', dir=outdir)
 
     scene_state = SparseGAState(scene, gradio_delete_cache, cache_dir, outfile_name)
-    outfile = get_3D_model_from_scene(silent, scene_state, min_conf_thr, as_pointcloud, mask_sky,
-                                      clean_depth, transparent_cams, cam_size, TSDF_thresh)
+
     print(scene_state.sparse_ga.depthmaps[0].cpu().numpy())
     import matplotlib.pyplot as plt
     import imageio.v2 as imageio 
 
-
-    # 16:9
-    depth_image = scene_state.sparse_ga.depthmaps[0].reshape(36, 64).cpu().numpy()
-    # 4:3
-    # depth_image = scene_state.sparse_ga.depthmaps[0].reshape(48, 64).cpu().numpy()
+    # Dynamically reshape depthmap to (N, 64) where N is inferred
+    depthmap = scene_state.sparse_ga.depthmaps[0]
+    width = 64
+    total = depthmap.numel()
+    height = total // width
+    if total % width != 0:
+        raise RuntimeError(f"Cannot reshape depthmap of size {total} to (?, {width})")
+    depth_image = depthmap.reshape(height, width).cpu().numpy()
+    # Example: for 16:9 use 36, for 4:3 use 48
 
     # Normalize depth to 0-65535 for 16-bit PNG
     depth_min = np.nanmin(depth_image)
@@ -251,22 +256,25 @@ def get_reconstructed_scene(outdir, gradio_delete_cache, model, retrieval_model,
     depth_norm = (depth_image - depth_min) / (depth_max - depth_min + 1e-8)
     depth_uint16 = (depth_norm * 65535).astype(np.uint16)
 
-    imageio.imwrite('depth_image_16bit.png', depth_uint16)
+    imageio.imwrite(outdir + '/depth_image_16bit.png', depth_uint16)
     # Save depth in millimeters as uint16 PNG
     depth_mm = (depth_image * 1000).astype(np.uint16)  # Convert meters to mm if needed
     print(depth_mm)
-    imageio.imwrite('depth_mm_16bit.png', depth_mm)
+    imageio.imwrite(outdir + '/depth_mm_16bit.png', depth_mm)
     print("16-bit depth image saved as 'depth_image_16bit.png'")
 
     plt.figure(figsize=(8, 8))
     plt.imshow(depth_image, cmap='viridis')
     plt.colorbar(label='Depth')
-    plt.title('48x48 Depth Image')
-    plt.savefig('depth_image.png', bbox_inches='tight', dpi=150)
-    plt.close()  # Close the figure to free memory
+    plt.title('Depth Image')
+    plt.savefig(outdir + '/depth_image.png', bbox_inches='tight', dpi=150)
+    plt.close()
     print("Depth image saved as 'depth_image.png'")
 
-    return scene_state, outfile
+
+    outfile, height = get_3D_model_from_scene(silent, scene_state, min_conf_thr, as_pointcloud, mask_sky,
+                                      clean_depth, transparent_cams, cam_size, TSDF_thresh, mask_path=mask_path,outdir=outdir)
+    return scene_state, outfile, height
 
 
 def set_scenegraph_options(inputfiles, win_cyclic, refid, scenegraph_type):
@@ -313,6 +321,116 @@ def set_scenegraph_options(inputfiles, win_cyclic, refid, scenegraph_type):
                               maximum=num_files - 1, step=1, visible=True)
 
     return graph_opt, winsize, win_cyclic, refid
+
+
+def main_demo_automated(input_folder, output_dir, mask_path, model, retrieval_model=None, device='cuda', 
+                       image_size=512, silent=False, gradio_delete_cache=False,
+                       # Optimization parameters
+                       lr1=0.07, niter1=300, lr2=0.01, niter2=300, optim_level='refine+depth',
+                       # Matching parameters
+                       matching_conf_thr=0.0, shared_intrinsics=False,
+                       # Scene graph parameters
+                       scenegraph_type='complete', winsize=1, win_cyclic=False, refid=0,
+                       # Output parameters
+                       min_conf_thr=1.5, as_pointcloud=True, mask_sky=False, clean_depth=True,
+                       transparent_cams=False, cam_size=0.2, TSDF_thresh=0.0):
+    """
+    Automated version of main_demo without Gradio interface.
+    
+    Args:
+        input_folder: Path to folder containing input images
+        output_dir: Directory to save output files
+        model: Pre-loaded MASt3R model
+        retrieval_model: Pre-loaded retrieval model (optional)
+        device: Device to run on ('cuda' or 'cpu')
+        image_size: Size to resize images to
+        silent: Whether to suppress output
+        gradio_delete_cache: Whether to delete cache after processing
+        
+        # Optimization parameters
+        lr1: Learning rate for coarse alignment
+        niter1: Number of iterations for coarse alignment
+        lr2: Learning rate for refinement
+        niter2: Number of iterations for refinement
+        optim_level: Optimization level ('coarse', 'refine', 'refine+depth')
+        
+        # Matching parameters
+        matching_conf_thr: Matching confidence threshold
+        shared_intrinsics: Whether to use shared intrinsics
+        
+        # Scene graph parameters
+        scenegraph_type: Type of scene graph ('complete', 'swin', 'logwin', 'oneref', 'retrieval')
+        winsize: Window size for scene graph
+        win_cyclic: Whether to use cyclic window
+        refid: Reference ID for scene graph
+        
+        # Output parameters
+        min_conf_thr: Minimum confidence threshold for output
+        as_pointcloud: Whether to output as point cloud
+        mask_sky: Whether to mask sky
+        clean_depth: Whether to clean depth maps
+        transparent_cams: Whether to use transparent cameras
+        cam_size: Camera size in output
+        TSDF_thresh: TSDF threshold
+        
+    Returns:
+        tuple: (scene_state, output_file_path)
+    """
+    import os
+    import glob
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Get all image files from input folder
+    image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff', '*.tif']
+    filelist = []
+    for ext in image_extensions:
+        filelist.extend(glob.glob(os.path.join(input_folder, ext)))
+        filelist.extend(glob.glob(os.path.join(input_folder, ext.upper())))
+    
+    filelist.sort()  # Sort for consistent ordering
+    
+    if not filelist:
+        raise ValueError(f"No image files found in {input_folder}")
+    
+    if not silent:
+        print(f'Found {len(filelist)} images in {input_folder}')
+        print('Processing images:', [os.path.basename(f) for f in filelist])
+    
+    # Use the existing reconstruction function
+    recon_fun = functools.partial(get_reconstructed_scene, output_dir, gradio_delete_cache, model,
+                                  retrieval_model, device, silent, image_size)
+    
+    # Call the reconstruction function with all parameters
+    scene_state, outfile, height = recon_fun(
+        current_scene_state=None,
+        filelist=filelist,
+        optim_level=optim_level,
+        lr1=lr1,
+        niter1=niter1,
+        lr2=lr2,
+        niter2=niter2,
+        min_conf_thr=min_conf_thr,
+        matching_conf_thr=matching_conf_thr,
+        as_pointcloud=as_pointcloud,
+        mask_sky=mask_sky,
+        clean_depth=clean_depth,
+        transparent_cams=transparent_cams,
+        cam_size=cam_size,
+        scenegraph_type=scenegraph_type,
+        winsize=winsize,
+        win_cyclic=win_cyclic,
+        refid=refid,
+        TSDF_thresh=TSDF_thresh,
+        shared_intrinsics=shared_intrinsics,
+        mask_path=mask_path
+    )
+    
+    if not silent:
+        print(f'3D model saved to: {outfile}')
+
+    return scene_state, outfile, height
 
 
 def main_demo(tmpdirname, model, retrieval_model, device, image_size, server_name, server_port, silent=False,
@@ -447,8 +565,7 @@ def get_pts_seen_by_cam0_with_mask(
     img_shape,
     mask_path,
     depth_path=None,
-    depth_tolerance_cm=10.0,
-    depth_scale_factor=1
+    depth_tolerance_cm=10.0
 ):
     import imageio
     import numpy as np
@@ -607,7 +724,7 @@ def get_pts_seen_by_cam0_with_mask(
         height = None
         print("No points to compute bounding box.")
 
-    return filtered_points
+    return filtered_points, height
 
 
 import trimesh
