@@ -18,6 +18,7 @@ from mast3r.utils.misc import hash_md5
 
 import mast3r.utils.path_to_dust3r  # noqa
 from dust3r.demo import set_print_with_timestamp
+import json
 
 import matplotlib.pyplot as pl
 pl.ion()
@@ -28,6 +29,8 @@ if __name__ == '__main__':
     parser = get_args_parser()
     args = parser.parse_args()
     set_print_with_timestamp()
+
+    object_path = "/home/stefan/Projects/Grounded-SAM-2-zeroshop/dataset/obj_000001"
 
     if args.server_name is not None:
         server_name = args.server_name
@@ -52,9 +55,9 @@ if __name__ == '__main__':
         #          silent=args.silent, share=args.share, gradio_delete_cache=args.gradio_delete_cache)
         # automated demo call
         scene_state, output_file, height = main_demo_automated(
-            input_folder="/home/stefan/Downloads/dataset_test_real_labor/obj_000006/train_pbr/scene/images",
-            output_dir="/home/stefan/Downloads/dataset_test_real_labor/obj_000006/train_pbr/scene/output",
-            mask_path="/home/stefan/Downloads/dataset_test_real_labor/obj_000006/train_pbr/scene/000000_mask.png",
+            input_folder=object_path + "/scene/images",
+            output_dir=object_path + "/scene/output",
+            mask_path=object_path + "/train_pbr/000000/mask/000000_000000.png",
             model=model,
             retrieval_model=None,  # optional
             device=args.device,
@@ -73,3 +76,8 @@ if __name__ == '__main__':
         )
 
         print(f"Estimated Object height: {height}")
+        object_info = {"estimated_height": height}
+        output_json_path = os.path.join(object_path, "scene", "output", "object_info.json")
+        with open(output_json_path, "w") as f:
+            json.dump(object_info, f, indent=4)
+        print(f"Saved estimated height to {output_json_path}")
