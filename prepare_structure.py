@@ -318,6 +318,22 @@ def main():
         print(f"  - {args.obj_path}/train_pbr/mast3r-sfm/segmented/images (0-29 rgb_mask images with black backgrounds)")
         print(f"  - {args.obj_path}/train_pbr/mast3r-sfm/surface/masks (20 renamed mask images)")
         print(f"  - {args.obj_path}/train_pbr/mast3r-sfm/surface/images (0-19 rgb_mask images)")
+        
+        # Check if scene/images folder exists
+        scene_images_folder = os.path.join(args.obj_path, "scene", "images")
+        if os.path.isdir(scene_images_folder):
+            # Copy 000000.png and 000001.png from the original rgb folder
+            rgb_folder = os.path.join(args.obj_path, "train_pbr", "000000", "rgb")
+            for idx in [0, 1]:
+                filename = f"{idx:06d}.png"
+                src = os.path.join(rgb_folder, filename)
+                dst = os.path.join(scene_images_folder, filename)
+                if os.path.exists(src):
+                    shutil.copy2(src, dst)
+                    print(f"Copied {src} to {dst}")
+                else:
+                    print(f"Warning: Could not find {filename} in rgb folder to copy to scene/images")
+
     else:
         print(f"\n✗ Failed to process {args.obj_path}")
 
