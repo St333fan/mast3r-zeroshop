@@ -4,7 +4,7 @@
 # This script runs the Python script for each object directory
 
 # Base path where all object directories are located
-BASE_PATH="/home/stefan/Downloads/objs_sizex10/objs_texture_sizex10"
+BASE_PATH="/home/st3fan/Projects/Grounded-SAM-2/dataset/test"
 
 # Path to the Python script
 PYTHON_SCRIPT="prepare_structure.py"

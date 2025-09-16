@@ -30,7 +30,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     set_print_with_timestamp()
 
-    object_path = "/home/stefan/Projects/Grounded-SAM-2-zeroshop/dataset/obj_000001"
+    object_path = "/home/st3fan/Projects/Grounded-SAM-2/dataset/test/obj_000001"
 
     if args.server_name is not None:
         server_name = args.server_name

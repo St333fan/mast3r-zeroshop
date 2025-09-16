@@ -4,14 +4,14 @@
 # This script runs the Python script for each object directory
 
 # Base path where all object directories are located
-BASE_PATH="/home/stefan/Downloads/objs_sizex10/objs_texture_sizex10"
+BASE_PATH="/home/st3fan/Projects/Grounded-SAM-2/dataset/test"
 
 # Path to the Python script
 PYTHON_SCRIPT="make_pairs_all.py"
 
 # Model parameters
 MODEL_NAME="MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric"
-RETRIEVAL_MODEL="./checkpoints/checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth"
+RETRIEVAL_MODEL="./checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth"
 
 # Check if the Python script exists
 if [ ! -f "$PYTHON_SCRIPT" ]; then

@@ -93,6 +93,13 @@ python make_pairs.py --dir /home/stefan/Downloads/objs_sizex10/objs_texture_size
 python kapture_mast3r_mapping.py   --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric   --dir /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm/images --pairsfile_path /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm/images/pairs.txt --output /home/stefan/Downloads/objs_sizex10/objs_texture_sizex10/obj_000015/train_pbr/mast3r-sfm --device cuda --conf_th 1.01 --min_len_track 2 --skip_geometric_verification
 ```
 
+### COLMAP in Conda if no local install possible or available
+```bash
+conda create -n colmap python=3.10
+conda activate colmap
+conda install conda-forge::colmap
+colmap gui
+```
 
 ## Original Git -->
 
@@ -195,10 +202,10 @@ pip install -r dust3r/requirements.txt
 # Optional: you can also install additional packages to:
 # - add support for HEIC images
 # - add required packages for visloc.py
-pip install -r dust3r/requirements_optional.txt
+pip install -r dust3r/requirements_optional.txt # NOT OPTIONAL FOR SfM
 ```
 
-3. compile and install ASMK
+3. compile and install ASMK, NOT OPTIONAL!!!
 ```bash
 pip install cython
 
