@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--object_path",
         type=str,
-        default="/home/stefan/Projects/Grounded-SAM-2-zeroshop/dataset/obj_000001",
+        default="/home/st3fan/Projects/Grounded-SAM-2/dataset/ycbv_real_subset/obj_000008",
         help="Path to the object directory"
     )
     args = parser.parse_args()

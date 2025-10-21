@@ -4,7 +4,7 @@
 # This script runs the Python script for each object directory
 
 # Base path where all object directories are located
-BASE_PATH="/home/st3fan/Projects/Grounded-SAM-2/dataset/test"
+BASE_PATH="/home/st3fan/Projects/Grounded-SAM-2/dataset/ycbv_real_subset"
 
 # Path to the Python script
 PYTHON_SCRIPT="./kapture_mast3r_mapping_all.py"
@@ -86,6 +86,10 @@ for i in {1..21}; do
         echo "✓ Successfully processed obj_$obj_num"
         ((success_count++))
 
+        # Activate colmap environment
+        source ~/miniconda3/etc/profile.d/conda.sh
+        conda activate colmap
+
         # Bundler export for both surface and segmented
         for mode in surface segmented; do
             sparse_dir="$obj_path/train_pbr/mast3r-sfm/$mode/sparse/0"
@@ -107,6 +111,9 @@ for i in {1..21}; do
         ((failed_count++))
         failed_objects+=("obj_$obj_num")
     fi
+
+        # Return to original environment
+        conda activate mast3r
 
     echo "----------------------------------------"
 done

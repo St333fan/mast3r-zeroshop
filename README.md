@@ -1,4 +1,10 @@
 ## Get Started with ZeroShop Camera-Registration (first Setup Repo, scroll down)
+
+Colmap is needed! Install local or install in seperate conda env, currently conda env is prefered!
+
+Install MASt3R as mentioned down in the original README, for now conda tested
+
+
 ### Render YCB-V First, set to 30 Cameras
 https://github.com/St333fan/BlenderProcRenderBOP
 
@@ -10,7 +16,7 @@ https://github.com/St333fan/Grounded-SAM-2-zeroshop
 1. Mast3r-SfM
 ```bash
 # generate structure, for one object
-python prepare_structure.py ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000003
+python prepare_structure.py ~/Downloads/objs_sizex10/objs_texture_sizex10/obj_000004
 
 ## generate structure for ycb-v test all, adapt dataset path in there
 chmod +x prepare_structure_all_ycbv.sh
@@ -94,11 +100,19 @@ python kapture_mast3r_mapping.py   --model_name MASt3R_ViTLarge_BaseDecoder_512_
 ```
 
 ### COLMAP in Conda if no local install possible or available
+Colmap is needed in kapture_mast3r_mapping_all.py for distortion, pycolmap does not have it; and for the .sh for bundle.out export
 ```bash
 conda create -n colmap python=3.10
 conda activate colmap
 conda install conda-forge::colmap
+# for viewing
 colmap gui
+```
+
+### Calculate height, refere to https://github.com/St333fan/Grounded-SAM-2-zeroshop for folder structure
+```bash
+# works only with real data processes by grounded-sam-2-zeroshop, and 4 images depicting the scene
+python process_scene_receive_obj_height.py --model_name MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric --object_path <path_to_object_in_dataset>
 ```
 
 ## Original Git -->

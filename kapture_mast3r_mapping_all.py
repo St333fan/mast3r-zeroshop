@@ -72,7 +72,7 @@ def run_colmap_commands(output_dir):
             return False
         
         print(f"Running COLMAP image undistorter for {output_dir}")
-        
+        """
         # Run COLMAP image undistorter
         cmd = [
             'colmap', 'image_undistorter',
@@ -83,7 +83,19 @@ def run_colmap_commands(output_dir):
             '--max_image_size', '2000',
             '--blank_pixels', '1'
         ]
-        subprocess.run(cmd, check=True)
+        """
+
+        # Prepare the COLMAP as conda command
+        colmap_cmd = [
+            "conda", "run", "-n", "colmap", "colmap", "image_undistorter",
+            "--image_path", image_path,
+            "--input_path", reconstruction_path,
+            "--output_path", dense_dir,
+            "--output_type", "COLMAP",
+            "--max_image_size", "2000",
+            "--blank_pixels", "1"
+        ]
+        subprocess.run(colmap_cmd, check=True)
         
         # Create sparse directory and copy dense/sparse to sparse/0
         os.makedirs(sparse_dir, exist_ok=True)
