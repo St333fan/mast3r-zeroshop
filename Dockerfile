@@ -14,14 +14,14 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /home/appuser/mast3r
 COPY . /home/appuser/mast3r/
 
-WORKDIR /home/appuser/mast3r/dust3r
+WORKDIR /home/appuser/mast3r/
 
-RUN pip install -r requirements.txt
-RUN pip install -r requirements_optional.txt
-RUN pip install opencv-python==4.8.0.74
+#RUN pip install -r requirements.txt
+#RUN pip install -r requirements_optional.txt
+#RUN pip install opencv-python==4.8.0.74
 
-WORKDIR /home/appuser/mast3r/dust3r/croco/models/curope/
-RUN python setup.py build_ext --inplace
+#WORKDIR /home/appuser/mast3r/dust3r/croco/models/curope/
+#RUN python setup.py build_ext --inplace
 
-WORKDIR /home/appuser/mast3r
-RUN pip install -r requirements.txt
+#WORKDIR /home/appuser/mast3r
+#RUN pip install -r requirements.txt
