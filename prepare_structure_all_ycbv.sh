@@ -4,7 +4,7 @@
 # This script runs the Python script for each object directory
 
 # Base path where all object directories are located
-BASE_PATH="/home/st3fan/Projects/Grounded-SAM-2/dataset/ycbv_real_subset"
+BASE_PATH="/code/datasets/ycbv_real_subset"
 
 # Path to the Python script
 PYTHON_SCRIPT="prepare_structure.py"
